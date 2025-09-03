@@ -7,4 +7,3 @@ app = FastAPI()
 @app.get('/')
 def status():
     return {'running': True, 'description': "Listening to requests"}
-
