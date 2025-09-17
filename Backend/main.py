@@ -26,19 +26,22 @@ def query(question: str):
     print("Received question:", question)
     response = invoke_llm(TOOL_CHAINING, question)
 
-    def clean_resonse(data: str):
+    def clean_resonse(response):
         data = response['choices'][0]['message']['content']
         data = data.replace("json", "")
         clean_data = data.replace("```", "").strip() 
         return clean_data
     
     clean_data = clean_resonse(response)
-    print("Response from Groq API:", clean_data)
+    # print("Response from Groq API:", clean_data)
     actions = json.loads(clean_data)
     tool_response = orchestrator(actions['instruction'], actions['parameters'])
-    print("Tool response:", tool_response)
-    prompt = RESPONSE_PROMPT.format(user_query=question, tool_data_json=json.dumps(tool_response))
-    final_response = invoke_llm(prompt, question)
+    # print("Tool response:", tool_response)
+
+    modified_query = f"{question} \n 'json to answer from': {json.dumps(tool_response)}"
+
+    final_response = invoke_llm(RESPONSE_PROMPT, modified_query)
+    # print("Final response from Groq API:", final_response)
     final_answer = clean_resonse(final_response)
     return {"answer": final_answer}
     

@@ -1,6 +1,7 @@
 import pandas as pd
 from requests import get
 import yfinance as yf 
+import json
 from datetime import timedelta, datetime
 import data_handlers as dh
 ### All tools and functions go here 
@@ -11,8 +12,8 @@ def orchestrator(instruction, parameters):
     else:
         response =  {"error": "Invalid instruction"}
     return response
-    
-def get_stock_price(company_name, date, marker: str = "Close"):
+
+def get_stock_price(company_name, date, marker):
     try:
         stock_name , ticker = dh.match_company_name_with_ticker(company_name)
         if not ticker:
@@ -21,10 +22,11 @@ def get_stock_price(company_name, date, marker: str = "Close"):
         if hist.empty:
             return {"error": "No data found for the given date"}
         closing_price = hist[marker].values[0]
+        print(hist)
         return {
-            "company_name": stock_name,
-            "date": date,
-            "closing_price": round(closing_price,2)
+            'company_name': stock_name,
+            'date': date,
+            f"{marker} price": float(round(closing_price,2))
         }
     except Exception as e:
         return {"error": str(e)}
