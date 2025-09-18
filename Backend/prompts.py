@@ -40,13 +40,33 @@ INTENT 1: Fetch the historical or present stock price of a certain company.
       "date": "<date in YYYY-MM-DD format>"
       "marker": will assume one value out of [Open, High, Low, Close] depending on the query.
 
+INTENT 2: If the query asks for change in stock price or any other price metric over a period of time:
+  Example queries:
+  - "What was the change in stock price of Adani Green between 2nd August 2025 and 5th September?"
+  - "What was the percentage change in stock price of  between 1st January 2025 and 1st June 2025?"
+  - "What was the highest stock price of Bandhan Bank in the month of August 2025?"
+  - "How much did HDFC Bank move in first 3 months of 2025?"
+  JSON format:
+    "instruction": "time_period",
+    "parameters":
+      "company_name": "<name of the company>",
+      "start_date": "<date in YYYY-MM-DD format>",
+      "end_data": "<date in YYYY-MM-DD format>",
+      "is_benchmark": True/False (True if the query asks for a market benchmark, False otherwise)
+  IMPORTANT: 
+  - The dates must be in YYYY-MM-DD format.   
+  - Try to derive the dates from the query. 
+
+MARKET BENCHMARKS: [Nifty 50, Sensex, Nifty Bank, Nifty IT, Nifty FMCG, Nifty Pharma]
 Respond ONLY in JSON."""
 
 
 RESPONSE_PROMPT = """
       You are an expert financial assistant.
       Your task is to answer user queries about stock prices using ONLY the provided JSON data.
-
+      - Never mention "JSON," "provided data," or how the information was determined or explain limitations.    
+      - Just give the answer naturally, in the style of a financial advisor.
+      - Try to keep the response content as close to what was asked in the query.
       - Answer the user's query clearly and naturally using ONLY the provided JSON data.
       - Do NOT invent or hallucinate any information.
       - If the JSON lacks the required information, politely state that you cannot provide an answer.
