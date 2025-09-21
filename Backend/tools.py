@@ -7,10 +7,10 @@ from datetime import timedelta, datetime
 from constants import *
 from utils import *
 import data_handlers as dh
+from user import currentUser
 
 ### All tools and functions go here 
 def orchestrator(instruction, parameters):
-    print(parameters)
     response: dict = {}
     if instruction == "stock_price":
         response = get_stock_price(parameters['company_name'], parameters['date'], parameters.get('marker'))
@@ -20,8 +20,10 @@ def orchestrator(instruction, parameters):
         response = time_period_for_benchmark(parameters['benchmark_name'], parameters['start_date'], parameters['end_date'])
     elif instruction == 'top_movers_for_benchmark':
         response = top_movers_for_benchmark(parameters['benchmark_name'], parameters['start_date'], parameters['end_date'], parameters.get('sort_order', 1), parameters.get('top_n', 5))
+    elif instruction == 'debt_vs_equity':
+        response = debt_vs_equity(parameters['target_age'], parameters['target_risk_profile'])
     else:
-        response =  {"error": "Invalid instruction"}
+        response =  {"error": "Invalid instruction, query not supported"}
     return response
 
 def get_stock_price(company_name, date, marker):
@@ -137,3 +139,16 @@ def top_movers_for_benchmark(benchmark_name, start_date, end_date, sort_order, t
     except Exception as e:
         return ERROR_MESSAGE_BACKEND
 
+def debt_vs_equity(target_age, target_risk_profile):
+    if not target_age:
+        age = currentUser.age
+    else: 
+        age = int(target_age)
+    # based on 100 - age rule
+    equity_percentage = max(10, 100 - age)
+    debt_percentage = 100 - equity_percentage
+    return{
+        'equity_suggested': equity_percentage,
+        'debt_suggested': debt_percentage,
+        'explanation': "As a general rule of thumb, the percentage of your portfolio that should be allocated to stocks is roughly equal to 100 minus your age. This means that as you get older, you should gradually shift your investments from stocks to more stable assets like bonds and cash equivalents. This helps to reduce risk as you approach retirement."
+    }

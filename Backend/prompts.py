@@ -81,6 +81,8 @@ INTENT 4: If the query asks for the top gainers/losers in a benchmark index(sect
   -  "Which Nifty 50 stocks had the biggest swings in Q1 2025"
   -  "Which were the top 5 losers in Nifty Bank in the month of August 2025?"
   -  "Which was the strongest performer in Nifty Pharma in the year 2024?"
+  -  "How much hit did the Automobiles sector take during the demonetisation crisis and what was the lowest it went to?"
+  -  ""How much speed did the Metal sector gain during the Modi Wave & Reform Push and what was the highest it went"
   JSON format:    
     "instruction": "top_movers_for_benchmark",
     "parameters":
@@ -90,14 +92,32 @@ INTENT 4: If the query asks for the top gainers/losers in a benchmark index(sect
       "sort_order": "1 if top gainers else 0", 
       "top_n": <number of top gainers/losers to return, default is 5>
 
+
+INTENT 5: If the query asks for debt vs equity allocation based on age/risk profile:
+  Example queries:      
+  -  "What should be my debt vs equity allocation"
+  -  "How much equity should I have in my portfolio by the age of 40?"
+  JSON format:    
+    "instruction": "debt_vs_equity",
+    "parameters":
+    "target_age": <target_age of the user, if not provided then None>,
+    "target_risk_profile": "<target_risk_profile of the user, if not provided then None>"
 Allowed Benchmarks(sectors): ["Nifty 50", "Nifty Bank", "Nifty IT", "Nifty Pharma", "Nifty FMCG", "Nifty Auto", "Nifty Energy", "Nifty Metal"]
 If the user query mentions Market, Indian markets or NIFTY 50 parse the benchmark as "Nifty 50"
+
 PERIODS OF STRESS/CRASH:  
 - 2008 Global Financial Crisis: January 2008 - March 2009
 - 2015 China Stock Market Crash: August 2015 - September 2015
 - 2016 Demonetization: November 9, 2016 - November 30, 2016 
 - 2020 COVID-19 Pandemic Crash: February 2020 - April 2020
 - 2024-2025 Market Slump: September 2024 - March 2025
+
+PERIODS OF RAPID GROWTH/BULL RUNS:
+- 1991 Liberalization Boom: July 1991 - March 1996
+- 2003-2007 IT & Telecom Surge: January 2003 - January 2008
+- 2009 Post-Global Financial Crisis Recovery: March 2009 - January 2010
+- 2014-2017 Modi Wave & Reform Push: May 2014 - December 2017
+- 2020-2021 Pandemic Recovery & Liquidity Surge: March 2020 - November 2021
 
 Respond ONLY in JSON."""
 
@@ -140,4 +160,21 @@ RESPONSE_PROMPT = """
       IMPORTANT:
       - For benchmarks, the price metric is referred to as 'Value' instead of 'Price'. Hence dont include the Rupee symbol (₹) when mentioning benchmark values.
       - Also for bigger values like the benchmark values, ignore the decimal points and round them off to the nearest integer.
+
+Some additional information that might help you detail the user's query:
+PERIODS OF STRESS/CRASH:  
+- 2008 Global Financial Crisis: January 2008 - March 2009
+- 2015 China Stock Market Crash: August 2015 - September 2015
+- 2016 Demonetization: November 9, 2016 - November 30, 2016 
+- 2020 COVID-19 Pandemic Crash: February 2020 - April 2020
+- 2024-2025 Market Slump: September 2024 - March 2025
+
+PERIODS OF RAPID GROWTH/BULL RUNS:
+- 1991 Liberalization Boom: July 1991 - March 1996
+- 2003-2007 IT & Telecom Surge: January 2003 - January 2008
+- 2009 Post-Global Financial Crisis Recovery: March 2009 - January 2010
+- 2014-2017 Modi Wave & Reform Push: May 2014 - December 2017
+- 2020-2021 Pandemic Recovery & Liquidity Surge: March 2020 - November 2021
+ 
+      
 """
