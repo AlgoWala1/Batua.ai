@@ -37,8 +37,7 @@ def query(question: str):
     actions = json.loads(clean_data)
     tool_response = orchestrator(actions['instruction'], actions['parameters'])
     # print("Tool response:", tool_response)
-
-    modified_query = f"{question} \n 'json to answer from': {json.dumps(tool_response)}"
+    modified_query = f"{question} \n\n 'json to answer from': {json.dumps(tool_response)}"
 
     final_response = invoke_llm(RESPONSE_PROMPT, modified_query)
     # print("Final response from Groq API:", final_response)
