@@ -2,7 +2,7 @@ import pandas as pd
 from requests import get
 import json
 from datetime import timedelta, datetime, date
-
+import math
 from constants import *
 from utils import *
 import data_handlers as dh
@@ -24,7 +24,9 @@ def orchestrator(instruction, parameters):
     elif instruction == 'debt_vs_equity':
         response = debt_vs_equity(parameters['target_age'], parameters['target_risk_profile'])
     elif instruction == 'technical_analysis':
-        response = technical_analysis(parameters['company_name'], parameters['days'])
+        response = technical_analysis(parameters['company_name'], parameters['days'], parameters.get('is_personal', False))
+    elif instruction == 'risk_score':
+        response = risk_score(parameters['company_name'])
     else:
         response =  {"error": "Invalid instruction, query not supported"}
     return response
@@ -143,9 +145,11 @@ def top_movers_for_benchmark(benchmark_name, start_date, end_date, sort_order, t
         return ERROR_MESSAGE_BACKEND
 
 
-def technical_analysis(company_name, days):
+def technical_analysis(company_name, days, is_personal: bool = False):
     days_for_calc = [20,50,100,200]
     if days:
+        if type(days) == str:
+            days = int(days)
         days_for_calc = [day for day in days_for_calc if day <= days]
     indicators = {}
     _ , ticker_symbol , ticker = dh.match_company_name_with_ticker(company_name)
@@ -161,6 +165,13 @@ def technical_analysis(company_name, days):
     indicators['Oscillators'].append(f"Stochastic %K (14): {float(stochastic(hist))}")
     indicators['Oscillators'].append(f"Commodity channel index(CCI 20): {float(CCI(hist))}")
     indicators['Current stock price'] = float(hist['Close'].iloc[0])
+    vol = volatility(dataframe=hist)
+    indicators['Volatility'] = [f"Annualised 1 year volatility: {vol}%"]
+    if is_personal:
+        if currentUser.risk == 'Low' and vol > 35:
+            indicators['Personal risk preference advice'] = f"Too risky according to risk appetite"
+        if currentUser.risk == 'High' and vol < 10:
+            indicators['Personal risk preference advice'] = f"Equity option is stable and may or may not satisfy your risk appetitie"
     return{
         'Analysis' : indicators
     }
@@ -173,9 +184,48 @@ def debt_vs_equity(target_age, target_risk_profile):
         age = int(target_age)
     # based on 100 - age rule
     equity_percentage = max(10, 100 - age)
+    if not target_risk_profile:
+        if currentUser.risk == 'High':
+            risk_factor = 1.3
+        elif currentUser.risk == 'Low':
+            risk_factor = 0.7
+        else:
+            risk_factor = 1
+        
+    else:
+        risk_factor = 1 + (int(target_risk_profile))/100
+
+    equity_percentage = equity_percentage * risk_factor
     debt_percentage = 100 - equity_percentage
+    age_field = 'present age' if not target_age else 'target age'
+    risk_field = 'present risk tolerance' if not target_risk_profile else 'future risk tolerenace'
     return{
         'equity_suggested': equity_percentage,
         'debt_suggested': debt_percentage,
-        'explanation': "As a general rule of thumb, the percentage of your portfolio that should be allocated to stocks is roughly equal to 100 minus your age. This means that as you get older, you should gradually shift your investments from stocks to more stable assets like bonds and cash equivalents. This helps to reduce risk as you approach retirement."
+        age_field : age,
+        risk_field : currentUser.risk if not target_risk_profile else f"{int(abs(risk_factor - 1) * 100)} %",
+        'explanation': "As a general rule of thumb, the percentage of your portfolio that should be allocated to Equity, for eg. stocks and mutual funds is roughly equal to 100 minus your age. Using this baseline , you can adjust depending on your risk tolerance: more aggressive investors may increase their stock allocation by up to some percentage, while more conservative investors may reduce it by a similar margin. This approach ensures your portfolio reflects both your age and your comfort with risk, while still gradually shifting toward more stable assets like bonds and cash equivalents as you approach retirement"
+    }
+
+def risk_score(company_name):
+    risk_scoring = 0
+    _ , ticker_symbol , ticker = dh.match_company_name_with_ticker(company_name)
+    hist = cache_lookup(ticker_symbol=ticker_symbol, end_date=datetime.strftime(datetime.today(),"%Y-%m-%d"), days_offset=800)
+    info = ticker.info
+    beta = info.get("beta")
+    PE = info.get("trailingPE")
+    vol = volatility(dataframe=hist)
+    # use an Gaussian penalty for deviation from 1
+    deviation = abs(beta - 1)
+    beta_stability = math.exp(-pow((deviation - 1), 2) / 0.5) * 100
+    print(beta)
+    if beta < 0:
+        # penalise even further for negative beta
+        beta_stability = (math.exp(-pow((deviation - 1), 2) / 0.5) * 100) / 2
+    print(beta_stability)
+    PE_stability = max(0, min(100, 100 - (PE - 15)))  # ideal PE is considered around 15
+    # lay equal weightage to beta deviation, volatility, PE ratio normalised 
+    risk_scoring = ((100 - beta_stability) + min(100, vol) + (100 - PE_stability)) / 3
+    return{
+        'risk_score': risk_scoring
     }

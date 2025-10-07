@@ -63,6 +63,13 @@ def CCI(dataframe):
   cci = current_deviation/(mean_deviation * scale)
   return cci
 
+def volatility(dataframe):
+  dataframe['returns'] = dataframe['Close'].iloc[0:252].pct_change()
+  vol_1y = dataframe['returns'].std()
+  annualised_vol_1y = (252)**0.5 * vol_1y
+  return annualised_vol_1y * 100
+
+
 # def CalcBeta(dataFrame):
 #   nifty = pd.read_csv("NIFTY50.csv")
 #   auto = pd.read_csv("^CNXAUTO.csv").sort_values(by = ["Close"],ascending=False,ignore_index=True)

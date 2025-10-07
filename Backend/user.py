@@ -7,6 +7,9 @@ class User:
         self.name = name
         self.email = email
         self.details = {}
+        # testing values #
+        self.age = 30
+        self.risk = 'Low'
 
 loginApi = FastAPI()
 
@@ -22,4 +25,4 @@ def login(email: str, password: str):
     return {'authenticated': True}
 
 # User who is currently logged in
-currentUser: User = None
+currentUser = User(user_id=None, name=None, email=None)

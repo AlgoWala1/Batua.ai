@@ -98,12 +98,15 @@ INTENT 5: If the query ask for technical analysis of stock
   Example queries:
   -  "Show me the technical analysis of Bajaj Finserv"
   -  "Show me the technial analysis of Bank of Maharashtra over 60 days period"
-  -  "Based on stock movement over the period of 3 months, is it a right time to buy Swiggy Limited shares"
+  -  "Based on stock movement over the period of 3 months, is it a right time to buy Swiggy Limited shares as a general investor"
+  -  "Should I buy Hindustan Unilever considering the technicals of this stock?"
+            - When a personal buy/sell question like this arises(first person query for buy/sell advice) set is_personal to True
 JSON format:
     "instruction": "technical_analysis",
     "parameters":
       "company_name": "<company name>",
       "days" : "<days specified, none otherwise>"
+      "is_personal" : "<True if first person usage, False in all cases>"
 IMPORTANT:
 - Set days only if the analysis corresponds to certain days' price(eg. EMA over 15 days) otherwise let it be None
 
@@ -111,11 +114,27 @@ INTENT 6: If the query asks for debt vs equity allocation based on age/risk prof
   Example queries:      
   -  "What should be my debt vs equity allocation"
   -  "How much equity should I have in my portfolio by the age of 40?"
+  -  "If I plan to use a lower risk non aggresive strategy what should my debt vs equity look like"
+  -  "What should my debt vs equity look like if I plan to use a 15% riskier portfolio suited for my age"
   JSON format:    
     "instruction": "debt_vs_equity",
     "parameters":
     "target_age": <target_age of the user, if not provided then None>,
     "target_risk_profile": "<target_risk_profile of the user, if not provided then None>"
+  IMPORTANT:
+  target_risk_profile will always be a numeric value if set.
+  1. If the query speaks of a numerical value(eg willing to manage a 20% riskier), then keep the value as that numerical value(always expressed as a percentage of 100).
+  2. For qualifiers like "low/medium/high" target risk profile is -30 if low,0 if medium and 30 if high
+
+  
+INTENT 7: Risk scoring/trend of a certain stock
+  Example queries:
+  - "How risky is Reliance Industries share"
+  JSON format:
+    "instruction": "risk_score"
+    "parameters":
+      "company_name": "<company name>"
+  
 
 Allowed Benchmarks(sectors): ["Nifty 50", "Nifty Bank", "Nifty IT", "Nifty Pharma", "Nifty FMCG", "Nifty Auto", "Nifty Energy", "Nifty Metal"]
 If the user query mentions Market, Indian markets or NIFTY 50 parse the benchmark as "Nifty 50"
@@ -209,6 +228,21 @@ RESPONSE_PROMPT = """
 
       Answer: The current stock price is ₹57.26. The short-term moving averages indicate a bullish trend. The 20-day MA is at ₹54.00 and the 20-day EMA is at ₹55.01, both below the current price, suggesting upward momentum. Medium-term averages are mixed: the 50-day MA is at ₹55.05 and the 50-day EMA is at ₹54.64, also below the current price, reinforcing a generally positive trend.\n\nAmong oscillators, the RSI is 51.19, indicating neutral momentum. The Stochastic %K at 88.99 and the CCI at 145.88 suggest overbought conditions, which may point to a short-term pullback or consolidation before continuation.
       Overall, the stock appears to be in a bullish phase with some short-term overextension. Investors may observe price behavior closely, looking for confirmation of trend continuation or minor corrections.
+      
+      Example: 
+      Query: "What should my debt vs equity look like if I plan to use a 15 % riskier portfolio suited for my age"
+      JSON:
+      {
+      "equity_suggested": 80.5,
+      "debt_suggested": 19.5,
+      "present age": 30,
+      "future risk tolerenace": "14 %",
+      "explanation": "As a general rule of thumb, the percentage of your portfolio that should be allocated to Equity, for eg. stocks and mutual funds is roughly equal to 100 minus your age. Using this baseline , you can adjust depending on your risk tolerance: more aggressive investors may increase their stock allocation by up to some percentage, while more conservative investors may reduce it by a similar margin. \n\n This approach ensures your portfolio reflects both your age and your comfort with risk, while still gradually shifting toward more stable assets like bonds and cash equivalents as you approach retirement"
+      }
+
+      Answer: The suggested equity allocation for a 30-year-old investor is 80.5%, with the remaining 19.5% allocated to debt. Using the baseline 100 - age rule, the default allocation would have been 70% equity and 30% debt. Considering your plan to adopt a higher-risk approach in the future, approximately 15% more aggressive than the baseline — the equity portion is adjusted proportionally to reflect this intended risk preference.
+      This adjustment ensures the portfolio balances growth potential with age-appropriate risk management. While the equity share is increased to capture potential returns from stocks and mutual funds, the debt portion maintains stability and liquidity. Overall, the portfolio is positioned for long-term growth while remaining aligned with your anticipated risk tolerance.
+
 
 Disclaimer: This analysis is for informational purposes only and not a recommendation for trading.
       TECHNICAL ANALYSIS:
@@ -217,11 +251,13 @@ Disclaimer: This analysis is for informational purposes only and not a recommend
         - SMA/MA: Compare price to SMA: if above → bullish, if below → bearish, crossing → possible trend reversal. Keep it crisp mentioning how many SMAs are above and how many are below.
         - EMA: Compare short EMA vs long EMA: short above long → bullish, short below long → bearish, crossovers → potential buy/sell.
         - Commodity Channel Index (CCI): Interpret CCI: >100 → overbought (price significantly above typical range), <-100 → oversold (price significantly below typical range), -100 to 100 → neutral.
+        - Annualised volatility: interpret as risk. 
         - For averages, dont overwhelm the user with many details
-        - For technical anaysis, generate an overall report also in a new paragraph giving importance in order RSI > CCI > Stochastic and  EMA > SMA. The report should be moderate in length around 100 words.
+        - For technical anaysis, generate an overall report also in a new paragraph giving importance in order RSI > CCI > Stochastic and  EMA > SMA. The report should be moderate in length not exceeding 100 words.
         - DONT MENTION THE ORDER OF IMPORTANCE(THAT IS CONFIDENTIAL)
         - DO ADD A DISCLAIMER SUGGESTING ANY RECOMMENDATION IS NOT FINAL
 
+For a personal query like "Should I buy Kalyan Jewellers considering the technicals of this stock?" If the JSON contains personal information fields, do consider that as important.
 
 Some additional information that might help you detail the user's query:
 

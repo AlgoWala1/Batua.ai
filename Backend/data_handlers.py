@@ -39,7 +39,7 @@ def init_ticker_dict():
     df = pd.read_csv('EQUITY_L.csv')
     print("CSV Read")
     df['NAME OF COMPANY'] = df['NAME OF COMPANY'].str.replace("limited", repl="", case=False)
-    print(df.head())
+    # print(df.head())
     company_names = df['NAME OF COMPANY'].tolist()
     company_names_to_ticker = df.set_index('NAME OF COMPANY')['SYMBOL'].to_dict()
     ticker_names_to_company = df.set_index('SYMBOL')['NAME OF COMPANY'].to_dict()
