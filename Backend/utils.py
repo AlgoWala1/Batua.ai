@@ -1,4 +1,5 @@
 import yfinance as yf
+from datetime import datetime
 from constants import *
 from cache import cache_lookup
 
@@ -70,45 +71,12 @@ def volatility(dataframe):
   return annualised_vol_1y * 100
 
 
-# def CalcBeta(dataFrame):
-#   nifty = pd.read_csv("NIFTY50.csv")
-#   auto = pd.read_csv("^CNXAUTO.csv").sort_values(by = ["Close"],ascending=False,ignore_index=True)
-#   nifty.rename(columns = {" Close":"Nifty"},inplace = True)
-#   auto.rename(columns = {"Close":"AutoNifty"},inplace = True)
-#   closings = pd.concat([dataFrame["Date"],nifty["Nifty"],auto["AutoNifty"],dataFrame["Close"]],axis = "columns")
-#   print("\n")
-#   print("Closing prices of stock with Nifty and Nifty Auto")
-#   print(closings.head())
-#   closings.dropna(inplace = True)
-#   NiftyRet = []
-#   StockRet = []
-#   AutoRet = []
-#   #produce a 2 year weekly analysis
-#   for week in range(104,0,-1):
-#     NiftyRet.append((nifty.Nifty[(week-1)*7] - nifty.Nifty[week*7]) * 100/nifty.Nifty[week*7])
-#     AutoRet.append((auto.AutoNifty[(week-1)*7] - auto.AutoNifty[week*7]) * 100/auto.AutoNifty[week*7])
-#     StockRet.append((dataFrame.Close[(week-1)*7] - dataFrame.Close[week*7]) * 100/dataFrame.Close[week*7])
-#   mapping = {"NiftyReturns":[],"AutoNiftyReturns":[],"StockReturns":[]}
-#   for week in range(0,103):
-#     mapping["NiftyReturns"].append(NiftyRet[week])
-#     mapping["StockReturns"].append(StockRet[week])
-#     mapping["AutoNiftyReturns"].append(AutoRet[week])
-#   dataFrame = pd.DataFrame(mapping)
-#   X = dataFrame[["NiftyReturns"]]
-#   linearModel = LinearRegression()
-#   linearModel.fit(X,dataFrame["StockReturns"])
-#   print()
-#   print("A 104 week Beta analysis")
-#   niftyBeta = round(linearModel.coef_[0],3)
-#   print("Beta value with regards to Nifty Index",niftyBeta)
-#   X = dataFrame[["AutoNiftyReturns"]]
-#   linearModel.fit(X,dataFrame["StockReturns"])
-#   auto = round(linearModel.coef_[0],3)
-#   print("Beta values with regards to Auto Nifty Index",auto)
-#   if (niftyBeta+auto)/2 < 0:
-#     print("Stock performs opposite to market")
-#   elif (niftyBeta + auto)/2 < 1:
-#     print("Stock moves slower than the market in the same direction")
-#   else:
-#     print("Stock moves faster than the market in the same direction")
-#   print("\n")
+def get_beta(ticker_symbol):
+  df_ticker = cache_lookup(ticker_symbol=ticker_symbol, end_date=datetime.strftime(datetime.today(),"%Y-%m-%d"), days_offset= 4 * 252)
+  df_benchmark = cache_lookup(ticker_symbol = BENCHMARKS.get("Nifty 50"), end_date=datetime.strftime(datetime.today(),"%Y-%m-%d"), days_offset= 4 * 252)
+  df_ticker['returns'] = df_ticker['Close'].pct_change()
+  df_benchmark['returns'] = df_benchmark['Close'].pct_change()
+  covariance = df_ticker['returns'].cov(df_benchmark['returns'])
+  variance = df_benchmark['returns'].var()
+  beta = covariance/variance
+  return beta

@@ -212,20 +212,28 @@ def risk_score(company_name):
     _ , ticker_symbol , ticker = dh.match_company_name_with_ticker(company_name)
     hist = cache_lookup(ticker_symbol=ticker_symbol, end_date=datetime.strftime(datetime.today(),"%Y-%m-%d"), days_offset=800)
     info = ticker.info
-    beta = info.get("beta")
+
+    # 4 year beta
+    beta = get_beta(ticker_symbol=ticker_symbol)
     PE = info.get("trailingPE")
+    print(PE)
     vol = volatility(dataframe=hist)
+
     # use an Gaussian penalty for deviation from 1
     deviation = abs(beta - 1)
     beta_stability = math.exp(-pow((deviation - 1), 2) / 0.5) * 100
-    print(beta)
+
     if beta < 0:
         # penalise even further for negative beta
         beta_stability = (math.exp(-pow((deviation - 1), 2) / 0.5) * 100) / 2
-    print(beta_stability)
+
     PE_stability = max(0, min(100, 100 - (PE - 15)))  # ideal PE is considered around 15
+
     # lay equal weightage to beta deviation, volatility, PE ratio normalised 
     risk_scoring = ((100 - beta_stability) + min(100, vol) + (100 - PE_stability)) / 3
     return{
-        'risk_score': risk_scoring
+        'risk_score': risk_scoring,
+        'beta': beta,
+        'PE': PE,
+        'volatility':vol
     }

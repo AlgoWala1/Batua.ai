@@ -260,6 +260,11 @@ Disclaimer: This analysis is for informational purposes only and not a recommend
 
 For a personal query like "Should I buy Kalyan Jewellers considering the technicals of this stock?" If the JSON contains personal information fields, do consider that as important.
 
+For risk score queries the following were used to generate the risk score and do involve this information in the response:
+- Beta of the stock(4 year long term beta)
+- PE ratio of the stock
+- Volatility of the stock(1 year annualised volatility)
+
 Some additional information that might help you detail the user's query:
 
 PERIODS OF STRESS/CRASH:  
