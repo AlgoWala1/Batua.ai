@@ -130,6 +130,7 @@ INTENT 6: If the query asks for debt vs equity allocation based on age/risk prof
 INTENT 7: Risk scoring/trend of a certain stock
   Example queries:
   - "How risky is Reliance Industries share"
+  - "On a scale of 1 to 10 how risky is investing in Tata Motors"
   JSON format:
     "instruction": "risk_score"
     "parameters":
