@@ -3,6 +3,7 @@ import json
 import requests
 import os
 from prompts import TOOL_CHAINING, RESPONSE_PROMPT
+from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
 from tools import orchestrator
@@ -12,6 +13,17 @@ import logging as log
 ### Backend Chat api definition goes here
 load_dotenv()
 app = FastAPI()
+
+origins = [
+    "*"
+]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,  # OR ["*"] to allow all
+    allow_credentials=True,
+    allow_methods=["*"],    # GET, POST, PUT, DELETE...
+    allow_headers=["*"],    # Allow all headers
+)
 
 @app.on_event("startup")
 def status():
@@ -65,3 +77,9 @@ def invoke_llm(prompt, query):
     }         
     response = requests.post(url, headers=headers, json=instructions).json()
     return response 
+
+
+@app.get("/stock_search")
+def stock_search(company:str):
+    print(dh.return_stocks(company))
+    return dh.return_stocks(company)

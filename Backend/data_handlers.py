@@ -34,6 +34,20 @@ def match_company_name_with_ticker(company : str):
         # case where name could not be resolved
         return None, None
     
+
+# Returns the json of stock name and symbol for 5 companies that best match the input company name
+def return_stocks(company: str):
+    matched_companies = process.extract(company, company_names, limit=5)
+    results = []
+    for name, score in matched_companies:
+        if score >= 60:
+            ticker_symbol = company_names_to_ticker.get(name) + ".NS"
+            results.append({
+                "company_name": name,
+                "ticker_symbol": ticker_symbol
+            })
+    return results
+    
 def init_ticker_dict():
     global company_names, company_names_to_ticker, ticker_names_to_company
     df = pd.read_csv('EQUITY_L.csv')
