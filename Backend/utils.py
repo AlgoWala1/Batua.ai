@@ -6,7 +6,6 @@ from cache import cache_lookup
 # Helper functions for tools and apis go here
 
 def get_benchmark_move(benchmark, start_date, end_date):
-    ticker = yf.Ticker()
     hist = cache_lookup(BENCHMARKS.get(benchmark, "^NSEI"), start_date=start_date, end_date=end_date)
     move = float(round((hist['Close'].iloc[-1] - hist['Open'].iloc[0])/hist['Open'].iloc[0] * 100, 2))
     return hist, move
