@@ -81,7 +81,6 @@ def invoke_llm(prompt, query):
 
 @app.get("/stock_search")
 def stock_search(company:str):
-    print(dh.return_stocks(company))
     return dh.return_stocks(company)
 
 # def stock_UI(symbol: str):

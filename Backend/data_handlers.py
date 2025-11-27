@@ -44,8 +44,12 @@ def return_stocks(company: str):
             ticker_symbol = company_names_to_ticker.get(name) + ".NS"
             results.append({
                 "company_name": name,
-                "ticker_symbol": ticker_symbol
+                "ticker_symbol": ticker_symbol,
+                "score":  score
             })
+    results = sorted(results, key= lambda x:x['score'], reverse = True)
+    for result in results:
+        del result['score']
     return results
     
 def init_ticker_dict():
